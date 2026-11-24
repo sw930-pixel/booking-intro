@@ -1,0 +1,294 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{margin:0}body{box-sizing:border-box}</style></head><body><title>花店 LINE 預約示範</title>
+
+<style>
+/* 版面概念：左邊是客人手機裡的 LINE 官方帳號，右邊是花店老闆看到的訂單與報名清單，兩邊互相連動 */
+:root{color-scheme:light;--bg:#f6f1f2;--card:#fff;--ink:#2a2226;--mute:#7a6c72;--line:#eadfe2;--main:#a8445f;--green:#06c755;--green-d:#05a647;--chat:#b9c6dc;--bubble:#fff;--mine:#8de055;--warn:#b7791f;--bad:#c0392b;--ok:#1a7f4b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,"Microsoft JhengHei",sans-serif;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:20px;margin:0 0 4px;color:var(--main)}
+.sub{color:var(--mute);font-size:13px;margin:0 0 12px}
+.top{max-width:1000px;margin:0 auto 12px}
+.grid{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:minmax(0,390px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.phone{background:#000;border-radius:28px;padding:10px;max-width:410px;width:100%;margin:0 auto;box-shadow:0 10px 30px rgba(40,20,30,.25)}
+.sheet{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:5}
+.sheet[hidden]{display:none}
+.sh-hd{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:#fff}
+.sh-hd b{flex:1}
+.sh-hd button{border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:var(--mute);padding:0 4px}
+.sh-bd{flex:1;overflow-y:auto;padding:12px 14px 20px}
+.sh-bd label,.sh-bd .lb{display:block;font-size:12px;color:var(--mute);margin:12px 0 4px}
+.sh-bd input,.sh-bd select,.sh-bd textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
+.opts{display:grid;gap:6px}
+.opt{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;cursor:pointer;background:#fff;font:inherit;font-size:14px;color:var(--ink);text-align:left}
+.opt.on{border-color:var(--green);background:#eafbf1}
+.opt2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lf{background:#eef7f1;border-radius:8px;padding:6px 10px;font-size:12px;color:var(--green-d);margin-bottom:4px}
+.err{color:var(--bad);font-size:13px;min-height:18px;margin-top:8px}
+.screen{position:relative;background:var(--chat);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;height:700px}
+.bar{background:#fff;display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.bar .logo{width:34px;height:34px;border-radius:50%;background:var(--main);color:#fff;display:grid;place-items:center;font-weight:700}
+.bar b{display:block;line-height:1.2}
+.bar small{color:var(--mute);font-size:12px}
+.bar .pill{margin-left:auto;font-size:11px;color:var(--green-d);border:1px solid var(--green);border-radius:99px;padding:0 8px}
+.chat{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:6px;align-items:flex-end;max-width:100%}
+.row.me{flex-direction:row-reverse}
+.av{flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:var(--main);color:#fff;font-size:13px;display:grid;place-items:center}
+.bub{background:var(--bubble);border-radius:14px;padding:9px 12px;max-width:82%;word-break:break-word;font-size:14px;line-height:1.6}
+.row.me .bub{background:var(--mine)}
+.tm{font-size:10px;color:#44546a;align-self:flex-end}
+.bub p{margin:0 0 6px}
+.bub p:last-child{margin-bottom:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--green);color:var(--green-d);background:#fff;border-radius:99px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit;text-align:left}
+.chip:hover{background:#eafbf1}
+.chip[disabled]{border-color:var(--line);color:#a0a8b5;cursor:not-allowed;background:#f6f7f9}
+.card2{background:#fff;border-radius:12px;overflow:hidden;min-width:230px}
+.card2 .hd{background:var(--green);color:#fff;padding:8px 12px;font-weight:700}
+.card2 .hd.rose{background:var(--main)}
+.card2 .bd{padding:10px 12px;font-size:13px}
+.card2 table{width:100%;border-collapse:collapse}
+.card2 td{padding:3px 0;vertical-align:top}
+.card2 td:last-child{text-align:right}
+.steps{display:flex;margin:6px 0 8px}
+.steps span{flex:1;text-align:center;font-size:11px;color:#9aa3b0;border-top:4px solid #dde3ea;padding-top:3px}
+.steps span.on{color:var(--green-d);border-color:var(--green);font-weight:700}
+.note{font-size:12px;color:var(--mute)}
+.fld{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.fld input,.fld textarea{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;width:100%}
+.btn{border:0;border-radius:8px;background:var(--green);color:#fff;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer;width:100%;margin-top:8px}
+.btn:hover{background:var(--green-d)}
+.inbar{display:flex;gap:6px;background:#fff;padding:6px 8px;border-top:1px solid var(--line)}
+.inbar input{flex:1;min-width:0;border:1px solid var(--line);border-radius:99px;padding:7px 12px;font:inherit;font-size:14px}
+.inbar button{border:0;background:var(--green);color:#fff;border-radius:99px;padding:0 14px;font:inherit;font-size:13px;cursor:pointer}
+.menu{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.menu button{background:#fff;border:0;padding:12px 4px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
+.menu button:hover{background:#fbf1f4}
+.menu button i{display:block;width:22px;height:4px;border-radius:2px;background:var(--main);margin:0 auto 6px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.panel h2{font-size:16px;margin:0 0 4px;color:var(--main);border-left:4px solid var(--main);padding-left:10px}
+.panel p{margin:6px 0;color:var(--mute);font-size:13px}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th,table.t td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t th{color:var(--mute);font-weight:500;font-size:12px}
+table.t tr.new td{background:#fff3d6;animation:flash 1.6s ease-out 1}
+@keyframes flash{from{background:#ffd98a}to{background:#fff3d6}}
+@media (prefers-reduced-motion:reduce){table.t tr.new td{animation:none}}
+.pushes{display:grid;gap:8px;margin-top:10px}
+.pushes button{border:1px solid var(--main);background:#fff;color:var(--main);border-radius:8px;padding:9px 12px;font:inherit;font-size:14px;cursor:pointer;text-align:left}
+.pushes button:hover{background:#fbf1f4}
+.pushes small{display:block;color:var(--mute);font-size:12px}
+.sent{color:var(--ok);font-size:13px;min-height:20px;margin-top:6px}
+.legal{font-size:12px;color:var(--mute);border:1px dashed var(--warn);border-radius:8px;padding:8px 10px;margin-top:10px}
+.tag{display:inline-block;padding:0 8px;border-radius:99px;font-size:11px;border:1px solid currentColor}
+.t-ok{color:var(--ok)}.t-warn{color:var(--warn)}.t-main{color:var(--main)}
+</style>
+
+<div class="top">
+  <h1>花店 LINE 預約示範</h1>
+  <p class="sub">左邊是客人手機裡的 LINE 官方帳號，右邊是花店老闆看到的訂單與報名清單。在左邊預訂或報名，右邊會馬上多一筆；在右邊按通知，左邊客人會收到訊息。店名、人名、電話、價格全部是虛構的。</p>
+</div>
+
+<div class="grid">
+  <div>
+    <div class="phone"><div class="screen">
+      <div class="bar"><div class="logo">花</div><div><b>示範花坊</b><small>官方帳號・週一至週六 10:00–19:00</small></div><span class="pill" id="badge">客人端</span></div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <form class="inbar" id="inbar" autocomplete="off"><input id="msg" placeholder="輸入訊息" aria-label="輸入訊息"><button type="submit">送出</button></form>
+      <div class="sheet" id="sheet" hidden><div class="sh-hd"><b id="shT">預約表單</b><button type="button" id="shX" aria-label="關閉">×</button></div><div class="sh-bd" id="shB"></div></div>
+      <div class="menu" id="menu">
+        <button data-m="order"><i></i>預訂花束</button>
+        <button data-m="cls"><i></i>報名花藝課</button>
+        <button data-m="query"><i></i>查詢訂單</button>
+        <button data-m="news"><i></i>最新消息</button>
+        <button data-m="info"><i></i>營業資訊</button>
+        <button data-m="contact"><i></i>聯絡我們</button>
+      </div>
+    </div></div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>老闆那邊看到：花束訂單</h2>
+      <p>客人預訂後，這裡馬上多一筆（黃色底）。取貨或外送、日期時段、卡片文字都在這裡，不用再翻對話找。</p>
+      <table class="t"><thead><tr><th>日期時段</th><th>客人</th><th>花束</th><th>方式</th></tr></thead><tbody id="orders"></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>老闆那邊看到：花藝課報名</h2>
+      <p>名額滿了，客人那邊就選不到。</p>
+      <table class="t"><thead><tr><th>場次</th><th>已報名</th><th>名單</th></tr></thead><tbody id="roster"></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>老闆一鍵通知客人</h2>
+      <p>不用逐一打電話或手打訊息。按下去，左邊客人的 LINE 就會收到。</p>
+      <div class="pushes">
+        <button data-p="ready">花束完成，通知可取貨<small>對應訂單 F-0001，王小姐</small></button>
+        <button data-p="out">外送出發，通知客人<small>對應訂單 F-0002，林先生</small></button>
+        <button data-p="class">花藝課前一天提醒<small>已報名的客人</small></button>
+        <button data-p="full">旺季滿單公告<small>某幾天不再接單，提前告訴大家</small></button>
+      </div>
+      <div class="sent" id="sent"></div>
+    </div>
+    <div class="panel">
+      <h2>這個示範想表達什麼</h2>
+      <p>客人端只做三件事：<b>預訂或報名</b>、<b>查自己的訂單進度</b>、<b>收通知</b>。花束訂單有「最早提前幾天」和「每天最多接幾單」的限制，旺季可以擋單；課程有名額。</p>
+      <p><b>這個示範的做法：</b>選單「預訂花束」「報名花藝課」會開一頁表單（LINE 裡的網頁，叫 LIFF），一次填完，也能帶入客人的 LINE 名稱。送出後由對話機器人回覆確認；查詢進度和通知都在對話裡。LINE 對話本身不能放輸入框，所以查詢訂單是機器人一題一題問、客人打字回答。右邊老闆的清單不在 LINE 裡，是另外一個後台頁面，需要資料庫才能讓兩邊即時同步。主動通知會用掉官方帳號每月的訊息額度，額度依方案而定。</p>
+      <div class="legal">這是示範畫面，不是真的 LINE。<br>示範裡的人名、電話、價格、地址都是虛構的，價格不是實際行情，也沒有處理任何付款。客人的電話、地址、卡片文字屬個資，正式使用前要先說明用途並妥善保管。<br><b>實測進度：</b>已實測：LIFF 網址在 LINE 內可打開網頁；選單連結、讀取名稱、表單送出、主動推播，以及對話機器人在真的 LINE 上的表現，尚未實測。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>"NT$"+Number(n).toLocaleString();
+const pad=n=>String(n).padStart(2,"0");
+const WD="日一二三四五六";
+const day=n=>{const d=new Date();d.setDate(d.getDate()+n);return d};
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const md=d=>pad(d.getMonth()+1)+"/"+pad(d.getDate())+"（週"+WD[d.getDay()]+"）";
+const hm=()=>{const d=new Date();return pad(d.getHours())+":"+pad(d.getMinutes())};
+const mask=p=>p.length>4?p.slice(0,4)+"***"+p.slice(-2):p;
+
+/* ===== 虛構資料與規則 ===== */
+const LEAD=2, CAP=6; /* 最早提前 2 天預訂；每天最多接 6 單 */
+const ITEMS=[{n:"小花束",p:680},{n:"精選花束",p:1280},{n:"花盒",p:1680},{n:"開幕花籃",p:2200}];
+const SLOTS=["10:00–12:00","12:00–15:00","15:00–18:00"];
+function nextSat(from){const d=day(from);while(d.getDay()!==6)d.setDate(d.getDate()+1);return d}
+const CLASSES=[
+ {id:"c1",n:"手綁花束體驗",d:nextSat(3),time:"14:00",seats:8,price:1200},
+ {id:"c2",n:"桌花設計班",d:nextSat(10),time:"14:00",seats:6,price:1800}];
+const ORDERS=[
+ {no:"F-0001",d:day(2),slot:"10:00–12:00",item:"精選花束",name:"王小姐",tel:"0912000123",how:"取貨",card:"生日快樂",st:2},
+ {no:"F-0002",d:day(2),slot:"15:00–18:00",item:"花盒",name:"林先生",tel:"0922000456",how:"外送",addr:"高雄市示範路 1 號（虛構）",card:"",st:2}];
+for(let i=0;i<CAP-0;i++)ORDERS.push({no:"F-9"+pad(i),d:day(4),slot:SLOTS[i%3],item:"小花束",name:"示範客"+i,tel:"0900000"+pad(i),how:"取貨",card:"",st:1,hidden:true}); /* 第 4 天已滿單，用來示範擋單 */
+const SIGN=[{cls:"c1",name:"周小姐",n:2},{cls:"c1",name:"張先生",n:3},{cls:"c2",name:"陳小姐",n:1}];
+const STEPS=["已接單","製作中","可取貨／配送中","完成"];
+let seq=3,flow=null,B={};
+
+/* ===== 對話 ===== */
+const chat=$("chat");
+function add(who,html,delay){const put=()=>{const r=document.createElement("div");r.className="row "+(who==="me"?"me":"bot");
+  r.innerHTML=(who==="bot"?'<div class="av">花</div>':"")+`<div class="bub">${html}</div><div class="tm">${hm()}</div>`;chat.appendChild(r);chat.scrollTop=chat.scrollHeight;return r};
+  if(who==="bot"&&delay)setTimeout(put,delay);else put()}
+const chips=(arr,a)=>'<div class="chips">'+arr.map(x=>`<button class="chip" ${x.off?"disabled":""} data-a="${a}" data-v="${esc(x.v)}">${esc(x.l)}</button>`).join("")+"</div>";
+const row=(l,v)=>`<tr><td>${l}</td><td>${v}</td></tr>`;
+const dayCount=ds=>ORDERS.filter(o=>ymd(o.d)===ds).length;
+const seatsLeft=c=>c.seats-SIGN.filter(s=>s.cls===c.id).reduce((a,s)=>a+s.n,0);
+
+/* ===== 預訂花束 ===== */
+function askItem(){flow="order";B={};add("bot","<p>想預訂哪一款？（價格為示範價）</p>"+chips(ITEMS.map(i=>({l:`${i.n}　${money(i.p)}`,v:i.n})),"item"),350)}
+function askDate(){const ds=[];for(let i=LEAD;ds.length<6;i++){const d=day(i);if(d.getDay()!==0)ds.push(d)}
+  const open=ds.filter(d=>dayCount(ymd(d))<CAP);
+  add("bot",`<p>好的，<b>${esc(B.item)}</b>。想哪一天取貨或送達？</p><p class="note">需提前 ${LEAD} 天預訂，週日休息。已滿單的日期不會出現在選項裡。</p>`+chips(open.map(d=>({l:md(d),v:ymd(d)})),"date"),350)}
+function askHow(){add("bot","<p>要到店取貨，還是外送？</p>"+chips([{l:"到店取貨",v:"取貨"},{l:"外送（示範：高雄市區）",v:"外送"}],"how"),350)}
+function askSlot(){add("bot",`<p>選${B.how==="外送"?"送達":"取貨"}時段：</p>`+chips(SLOTS.map(s=>({l:s,v:s})),"slot"),350)}
+/* LINE 對話裡不能放輸入框，姓名、電話等改成機器人一題一題問，客人在下方輸入列打字回答 */
+let exp=null;
+function askInfo(){exp="name";add("bot",`<p>最後請留下聯絡資料，我會一題一題問。</p><p>請輸入${B.how==="外送"?"收件人":"取貨人"}稱呼，例：王小姐</p><p class="note">示範請填假資料。請在下方輸入列打字。</p>`,350)}
+function confirmOrder(){const no="F-"+String(seq++).padStart(4,"0"),it=ITEMS.find(x=>x.n===B.item);
+  ORDERS.push({no,d:new Date(B.date+"T00:00"),slot:B.slot,item:B.item,name:B.name,tel:B.tel,how:B.how,addr:B.addr||"",card:B.card||"",st:0,fresh:true});renderOrders();
+  add("bot",`<div class="card2"><div class="hd">預訂完成</div><div class="bd"><table>${row("訂單編號",no)}${row("花束",esc(B.item)+"　"+money(it.p))}${row("日期時段",md(new Date(B.date+"T00:00"))+" "+esc(B.slot))}${row("方式",B.how==="外送"?"外送":"到店取貨")}${B.addr?row("地址",esc(B.addr)):""}${B.card?row("卡片",esc(B.card)):""}</table>
+   <p class="note" style="margin-top:8px">花材依當日進貨可能微調，會維持相近的色系與風格。有任何變動，我們會先跟您聯絡。付款方式由店家與您確認，這個示範沒有收款。</p></div></div>`,500);flow=null}
+
+/* ===== 報名花藝課 ===== */
+function askClass(){flow="cls";B={};add("bot","<p>想報名哪一堂？</p>"+chips(CLASSES.filter(c=>seatsLeft(c)>0).map(c=>({l:`${c.n}｜${md(c.d)} ${c.time}｜${money(c.price)}｜剩 ${seatsLeft(c)} 位`,v:c.id})),"cls")+'<p class="note" style="margin-top:6px">額滿的場次不會出現在選項裡。</p>',350)}
+function askPeople(){const c=CLASSES.find(x=>x.id===B.cls),max=Math.min(4,seatsLeft(c));
+  add("bot",`<p><b>${esc(c.n)}</b>，剩 ${seatsLeft(c)} 位。幾位報名？</p>`+chips(Array.from({length:max},(_,i)=>({l:(i+1)+" 位",v:String(i+1)})),"ppl"),350)}
+function askInfoC(){exp="name";add("bot",`<p>請輸入報名人稱呼，例：王小姐</p><p class="note">示範請填假資料。</p>`,350)}
+function confirmClass(){const c=CLASSES.find(x=>x.id===B.cls);SIGN.push({cls:c.id,name:B.name,n:B.n,fresh:true});renderRoster();
+  add("bot",`<div class="card2"><div class="hd">報名完成</div><div class="bd"><table>${row("課程",esc(c.n))}${row("時間",md(c.d)+" "+c.time)}${row("人數",B.n+" 位")}${row("費用",money(c.price*B.n)+"（現場繳費，示範）")}</table><p class="note" style="margin-top:8px">課前一天會再提醒您。要改期或取消，請提前回覆這則訊息。</p></div></div>`,500);flow=null}
+
+/* ===== 查詢訂單 ===== */
+function askQuery(){flow="query";exp="qno";add("bot",`<p>請輸入<b>訂單編號</b>，例：F-0001</p><p class="note">示範可試：F-0001＋123、F-0002＋456。輸入編號後，我會再問電話後 3 碼。</p>`,350)}
+function showOrder(o){const it=ITEMS.find(x=>x.n===o.item);
+  add("bot",`<div class="card2"><div class="hd rose">訂單進度　${o.no}</div><div class="bd"><div><b>${esc(o.item)}</b>　${o.how==="外送"?"外送":"到店取貨"}</div>
+   <div class="steps">${STEPS.map((s,i)=>`<span class="${i<=o.st?"on":""}">${s}</span>`).join("")}</div>
+   <table>${row("日期時段",md(o.d)+" "+esc(o.slot))}${row("金額（示範價）",money(it.p))}${o.card?row("卡片",esc(o.card)):""}</table>
+   <p class="note" style="margin-top:8px">${o.st>=3?"已完成，謝謝您。":"實際完成時間依當日備花與外送情況調整，有變動會通知您。"}</p></div></div>`,500)}
+
+/* ===== 其他選單 ===== */
+function showNews(){add("bot",`<div class="card2"><div class="hd">最新消息</div><div class="bd"><p><b>節日預訂提早開放</b></p><p>節日前後的花束建議提早預訂，單量滿了就不再接單。</p><p class="note">示範內容，非真實活動。</p></div></div>`,400)}
+function showInfo(){add("bot",`<div class="card2"><div class="hd">營業資訊</div><div class="bd"><table>${row("營業時間","週一至週六 10:00–19:00")}${row("公休","週日")}${row("預訂規則","需提前 2 天，節日另行公告")}${row("地址","高雄市示範路 1 號（虛構）")}${row("電話","07-000-0000（虛構）")}</table></div></div>`,400)}
+function showContact(){add("bot","<p>有問題可以直接在這裡留言。急件請直接來電。</p>",350)}
+
+/* ===== 老闆端清單 ===== */
+function renderOrders(){const rows=ORDERS.filter(o=>!o.hidden).slice().sort((a,b)=>(ymd(a.d)+a.slot)<(ymd(b.d)+b.slot)?-1:1);
+  $("orders").innerHTML=rows.map(o=>`<tr class="${o.fresh?"new":""}"><td>${md(o.d)}<br>${esc(o.slot)}</td><td>${esc(o.name)}<br><span class="note">${esc(mask(o.tel))}</span></td><td>${esc(o.item)}${o.fresh?' <span class="tag t-warn">新訂單</span>':""}${o.card?`<br><span class="note">卡片：${esc(o.card)}</span>`:""}</td><td>${o.how}${o.addr?`<br><span class="note">${esc(o.addr)}</span>`:""}</td></tr>`).join("");
+  ORDERS.forEach(o=>o.fresh=false)}
+function renderRoster(){$("roster").innerHTML=CLASSES.map(c=>{const list=SIGN.filter(s=>s.cls===c.id);
+  return `<tr class="${list.some(s=>s.fresh)?"new":""}"><td>${esc(c.n)}<br><span class="note">${md(c.d)} ${c.time}</span></td><td>${c.seats-seatsLeft(c)} / ${c.seats}${seatsLeft(c)<=0?' <span class="tag t-ok">額滿</span>':""}</td><td>${list.map(s=>esc(s.name)+"×"+s.n+(s.fresh?' <span class="tag t-warn">新</span>':"")).join("<br>")||"—"}</td></tr>`}).join("");
+  SIGN.forEach(s=>s.fresh=false)}
+
+/* ===== 老闆一鍵通知 ===== */
+const PUSH={
+ ready:{sent:"已通知王小姐：花束可取貨",msg:()=>`<div class="card2"><div class="hd">取貨通知</div><div class="bd"><p>您預訂的花束（精選花束　F-0001）已經完成，可以來取貨了。</p><p class="note">取貨前歡迎先來電告知時間。</p></div></div>`},
+ out:{sent:"已通知林先生：外送出發",msg:()=>`<div class="card2"><div class="hd rose">外送通知</div><div class="bd"><p>您預訂的花盒（F-0002）已經從店裡出發，預計 30 分鐘內送達。</p><p class="note">請留意收件人電話。若無人收件，我們會先聯絡您。</p></div></div>`},
+ class:{sent:"已發送課前提醒（3 位客人）",msg:()=>`<div class="card2"><div class="hd">課前提醒</div><div class="bd"><p>提醒您，明天 14:00 有「手綁花束體驗」，請準時到店。需要改期請在這裡回覆。</p></div></div>`},
+ full:{sent:"已發送旺季滿單公告",msg:()=>`<div class="card2"><div class="hd rose">滿單公告</div><div class="bd"><p>${md(day(4))} 的花束訂單已經額滿，不再接單。想訂其他日期，請點下方「預訂花束」。</p></div></div>`}};
+document.querySelector(".pushes").addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(!b)return;const p=PUSH[b.dataset.p];
+  add("bot",p.msg(),250);$("sent").textContent="✓ "+p.sent+"。看左邊手機，客人收到了。";
+  const bd=$("badge");bd.textContent="新訊息";setTimeout(()=>bd.textContent="客人端",2500)});
+
+/* ===== 事件 ===== */
+$("menu").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(!b)return;const m=b.dataset.m,L={order:"預訂花束",cls:"報名花藝課",query:"查詢訂單",news:"最新消息",info:"營業資訊",contact:"聯絡我們"};
+  exp=null;add("me",L[m]);({order:()=>openSheet("order"),cls:()=>openSheet("cls"),query:askQuery,news:showNews,info:showInfo,contact:showContact})[m]()});
+chat.addEventListener("click",e=>{const c=e.target.closest("[data-a]");if(!c)return;const a=c.dataset.a;exp=null;
+  if(a==="item"){B.item=c.dataset.v;add("me",esc(B.item));askDate()}
+  else if(a==="date"){B.date=c.dataset.v;add("me",md(new Date(B.date+"T00:00")));askHow()}
+  else if(a==="how"){B.how=c.dataset.v;add("me",esc(B.how==="外送"?"外送":"到店取貨"));askSlot()}
+  else if(a==="slot"){B.slot=c.dataset.v;add("me",esc(B.slot));askInfo()}
+  else if(a==="cls"){B.cls=c.dataset.v;add("me",esc(CLASSES.find(x=>x.id===B.cls).n));askPeople()}
+  else if(a==="ppl"){B.n=+c.dataset.v;add("me",B.n+" 位");askInfoC()}
+});
+/* 客人在輸入列打字：依目前在問哪一題處理 */
+function onText(t){
+  if(exp==="name"){B.name=t;exp="tel";add("bot","<p>請輸入電話，例：0912345678</p>",350)}
+  else if(exp==="tel"){if(!/^[0-9-]{8,12}$/.test(t)){add("bot","<p>電話格式不太對，請再輸入一次（只要數字）。</p>",350);return}
+    B.tel=t;if(flow==="cls"){exp=null;confirmClass()}else if(B.how==="外送"){exp="addr";add("bot","<p>請輸入外送地址</p>",350)}else{exp="card";add("bot","<p>卡片上想寫的字？沒有的話輸入「無」。</p>",350)}}
+  else if(exp==="addr"){B.addr=t;exp="card";add("bot","<p>卡片上想寫的字？沒有的話輸入「無」。</p>",350)}
+  else if(exp==="card"){B.card=t==="無"?"":t;exp=null;confirmOrder()}
+  else if(exp==="qno"){B.qno=t.toUpperCase();exp="qtail";add("bot","<p>請輸入電話後 3 碼</p>",350)}
+  else if(exp==="qtail"){exp=null;const o=ORDERS.find(x=>x.no===B.qno&&x.tel.slice(-3)===t&&!x.hidden);
+    if(o)showOrder(o);else add("bot","<p>找不到這張訂單。請確認訂單編號和電話後 3 碼，或直接來電詢問。</p>",350)}
+  else add("bot","<p>請點下方選單選擇服務。</p>",350)}
+$("inbar").addEventListener("submit",e=>{e.preventDefault();const i=$("msg"),t=i.value.trim();if(!t)return;i.value="";add("me",esc(t));onText(t)});
+/* ===== LIFF 表單：選單「預訂花束／報名花藝課」開網頁，在 LINE 裡填完整表單 ===== */
+const LINE_NAME="示範用戶";
+function closeSheet(){$("sheet").hidden=true}
+$("shX").addEventListener("click",closeSheet);
+const sel=(id,arr)=>`<select id="${id}">${arr.map(o=>`<option value="${esc(o.v)}"${o.off?" disabled":""}>${esc(o.l)}</option>`).join("")}</select>`;
+function openSheet(kind){const sh=$("sheet"),bd=$("shB");sh.hidden=false;bd.scrollTop=0;
+  if(kind==="order"){$("shT").textContent="預訂花束";
+    const ds=[];for(let i=LEAD;ds.length<8;i++){const d=day(i);if(d.getDay()!==0)ds.push(d)}
+    bd.innerHTML=`<div class="lf">已帶入 LINE 名稱：${LINE_NAME}（LIFF 讀取，需客人同意）</div>
+    <div class="lb">花束款式</div><div class="opts" id="oItems">${ITEMS.map((i,k)=>`<button type="button" class="opt${k===0?" on":""}" data-v="${i.n}"><span>${i.n}</span><span>${money(i.p)}</span></button>`).join("")}</div>
+    <label for="oDate">日期（需提前 ${LEAD} 天，週日休息）</label>${sel("oDate",ds.map(d=>({v:ymd(d),l:md(d)+(dayCount(ymd(d))>=CAP?"　已滿單":""),off:dayCount(ymd(d))>=CAP})))}
+    <div class="lb">取貨方式</div><div class="opt2" id="oHow"><button type="button" class="opt on" data-v="取貨">到店取貨</button><button type="button" class="opt" data-v="外送">外送</button></div>
+    <label for="oSlot">時段</label>${sel("oSlot",SLOTS.map(s=>({v:s,l:s})))}
+    <label for="oName">稱呼</label><input id="oName" value="${LINE_NAME}">
+    <label for="oTel">電話（示範請填假的）</label><input id="oTel" inputmode="tel" placeholder="0912345678">
+    <div id="oAddrW" hidden><label for="oAddr">外送地址（示範請填假的）</label><input id="oAddr"></div>
+    <label for="oCard">卡片文字（選填）</label><textarea id="oCard" rows="2"></textarea>
+    <div class="err" id="oErr"></div><button class="btn" type="button" id="oGo">送出預訂</button>`;
+    const pick=id=>{$(id).addEventListener("click",e=>{const b=e.target.closest(".opt");if(!b)return;$(id).querySelectorAll(".opt").forEach(x=>x.classList.toggle("on",x===b));if(id==="oHow")$("oAddrW").hidden=b.dataset.v!=="外送"})};pick("oItems");pick("oHow");
+    $("oGo").addEventListener("click",()=>{const v=id=>($(id).value||"").trim(),how=$("oHow").querySelector(".on").dataset.v;
+      if(!v("oName")||!/^[0-9-]{8,12}$/.test(v("oTel"))||(how==="外送"&&!v("oAddr"))){$("oErr").textContent="請填稱呼、正確的電話"+(how==="外送"?"、地址":"")+"。";return}
+      B={item:$("oItems").querySelector(".on").dataset.v,date:$("oDate").value,how,slot:$("oSlot").value,name:v("oName"),tel:v("oTel"),addr:how==="外送"?v("oAddr"):"",card:v("oCard")};
+      closeSheet();add("me","（已送出預約表單）");confirmOrder()})}
+  else{$("shT").textContent="報名花藝課";const open=CLASSES.filter(c=>seatsLeft(c)>0);
+    bd.innerHTML=`<div class="lf">已帶入 LINE 名稱：${LINE_NAME}（LIFF 讀取，需客人同意）</div>
+    <label for="cC">場次（額滿的不顯示）</label>${sel("cC",open.map(c=>({v:c.id,l:`${c.n}｜${md(c.d)} ${c.time}｜${money(c.price)}｜剩 ${seatsLeft(c)} 位`})))}
+    <label for="cN">人數</label><select id="cN"></select>
+    <label for="cName">稱呼</label><input id="cName" value="${LINE_NAME}">
+    <label for="cTel">電話（示範請填假的）</label><input id="cTel" inputmode="tel" placeholder="0912345678">
+    <div class="err" id="cErr"></div><button class="btn" type="button" id="cGo">送出報名</button>`;
+    const fill=()=>{const c=CLASSES.find(x=>x.id===$("cC").value),m=Math.min(4,seatsLeft(c));$("cN").innerHTML=Array.from({length:m},(_,i)=>`<option value="${i+1}">${i+1} 位</option>`).join("")};fill();$("cC").addEventListener("change",fill);
+    $("cGo").addEventListener("click",()=>{const n=($("cName").value||"").trim(),t=($("cTel").value||"").trim();
+      if(!n||!/^[0-9-]{8,12}$/.test(t)){$("cErr").textContent="請填稱呼和正確的電話。";return}
+      B={cls:$("cC").value,n:+$("cN").value,name:n,tel:t};closeSheet();add("me","（已送出報名表單）");confirmClass()})}}
+renderOrders();renderRoster();
+add("bot","<p>您好，這裡是示範花坊官方帳號。</p><p>點下方選單，可以<b>預訂花束</b>、<b>報名花藝課</b>（會開啟表單頁）、<b>查詢訂單進度</b>，有進度也會主動通知您。</p>");
+</script>
+</body></html>

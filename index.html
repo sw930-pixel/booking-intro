@@ -1,0 +1,94 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{margin:0}body{box-sizing:border-box}</style></head><body><title>LINE 預約系統介紹</title>
+
+<style>
+/* 版面：單欄長頁，先講客人怎麼用、老闆得到什麼，再講需要什麼與目前進度 */
+:root{color-scheme:light;--bg:#f7f2f3;--card:#fff;--ink:#2a2226;--mute:#6f6167;--line:#eadfe2;--main:#a8445f;--green:#06c755;--green-d:#058a3c;--warn:#8a5a00;--warnbg:#fff6e0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 system-ui,"Microsoft JhengHei",sans-serif;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:720px;margin:0 auto;display:grid;gap:16px}
+h1{font-size:26px;line-height:1.35;margin:0;color:var(--main);text-wrap:balance}
+h2{font-size:19px;margin:0 0 8px;text-wrap:balance}
+p{margin:0 0 8px}
+.lead{font-size:17px;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.cols>div{min-width:0;border-top:3px solid var(--main);padding-top:8px}
+.cols b{display:block;margin-bottom:2px}
+.cols span,.muted{color:var(--mute);font-size:14px}
+ol,ul{margin:0;padding-left:22px}
+li{margin-bottom:6px}
+.btn{display:inline-block;background:var(--green);color:#fff;text-decoration:none;border-radius:8px;padding:10px 18px;font-weight:600}
+.btn:hover,.btn:focus-visible{background:var(--green-d)}
+.status{width:100%;border-collapse:collapse;font-size:15px}
+.status td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.status td:first-child{width:62%}
+.ok{color:var(--green-d);font-weight:600}
+.no{color:var(--warn);font-weight:600}
+.warn{background:var(--warnbg);border:1px dashed var(--warn);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--warn)}
+.scroll{overflow-x:auto}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.plan{min-width:0;border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.plan b{color:var(--main);font-size:17px}
+.plan span{font-size:14px}
+.plan em{font-style:normal;font-size:13px;color:var(--mute)}
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>用 LINE 官方帳號接預約，不用再翻對話找訂單</h1>
+    <p class="lead">客人在你原本的 LINE 官方帳號裡預訂、報名、查進度。訂單自動整理成清單，老闆按一個鈕就能通知客人。適合花店、修車廠、美容美髮這類要約時間、要留名額的小店。</p>
+    <p style="margin-top:12px"><a class="btn" href="demo.html">先玩玩看示範（花店）</a></p>
+  </div>
+
+  <div class="card">
+    <h2>客人怎麼用</h2>
+    <div class="cols">
+      <div><b>點選單開表單</b><span>款式、日期、時段、取貨或外送、聯絡資料，一頁填完。額滿的日期選不到。</span></div>
+      <div><b>收到確認卡</b><span>送出後對話裡馬上回覆訂單編號和內容，不用等老闆回訊息。</span></div>
+      <div><b>隨時查進度</b><span>輸入訂單編號和電話後 3 碼，看到已接單、製作中、可取貨。</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>老闆得到什麼</h2>
+    <ul>
+      <li><b>一張訂單清單</b>：日期時段、取貨或外送、卡片文字都在同一處，不用翻對話。</li>
+      <li><b>自己設限制</b>：最早提前幾天、每天最多接幾單，旺季自動擋單。課程設名額，滿了就不能報。</li>
+      <li><b>一鍵通知</b>：花束完成、外送出發、課前提醒、滿單公告，不用逐一手打。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>開通要做的事</h2>
+    <ol>
+      <li>店家提供現有的 LINE 官方帳號，並在後台啟用 Messaging API。</li>
+      <li>建立 LINE 登入頻道，放表單頁（LIFF），和上一步放同一個提供者底下。</li>
+      <li>設定店名、品項、時段、名額、營業日。</li>
+      <li>在 LINE 官方帳號後台設定選單，連到表單。</li>
+      <li>用店家自己的手機實際預訂一次，確認訂單、確認卡、通知都正常，再正式對外。</li>
+    </ol>
+    <p class="muted" style="margin-top:8px">頻道密鑰和權杖由店家自己貼進設定，不經過第三方，也不寫進程式碼。</p>
+  </div>
+
+  <div class="card">
+    <h2>可選方案</h2>
+    <p class="muted">看完示範後，選一個最符合你店的方案，確定後再製作正式版。價格確定後會列在這裡。</p>
+    <div class="plans">
+      <div class="plan"><b>基本</b><span>選單加對話預約，客人在對話裡選款式、日期、時段，並可查進度。</span><em>適合：預約項目單純，先試試看。</em></div>
+      <div class="plan"><b>標準</b><span>基本，再加完整表單頁、課程名額、擋單設定、一鍵通知。</span><em>適合：花店這類有外送、卡片文字、課程的店。</em></div>
+      <div class="plan"><b>完整</b><span>標準，再加老闆用的訂單後台和客人名單。</span><em>適合：訂單量多，想集中管理。</em></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>店家先知道的事</h2>
+    <ul>
+      <li><b>訊息額度</b>：機器人回覆客人不計額度，主動通知（例如取貨通知）會用掉官方帳號每月的訊息額度，依店家方案而定。</li>
+      <li><b>客人個資</b>：電話、地址、卡片文字屬個資，只用來處理訂單，需要說明用途並妥善保管。</li>
+      <li><b>不收款</b>：目前只處理預約和通知，付款由店家自行跟客人確認。</li>
+    </ul>
+  </div>
+
+  <p class="muted">示範畫面裡的店名、人名、電話、價格都是虛構的。</p>
+</div>
+</body></html>
